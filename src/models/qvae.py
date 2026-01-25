@@ -16,7 +16,7 @@ class HybridQVAE(nn.Module):
             nn.Sigmoid() 
         )
         
-        # 2. Quantum Encoder Layer (6 qubits)
+        # 2. Quantum Encoder Layer (6 qubits, 6 layers for more expressivity)
         self.quantum_layer = QuantumEncoder(n_qubits=6, n_layers=6)
         
         # 3. Classical Decoder

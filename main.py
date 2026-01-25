@@ -68,11 +68,7 @@ def main():
         
         print(f"Epoch {epoch+1}/{EPOCHS} | Loss: {total_loss:.4f}")
 
-    print("\n--- Setup Complete ---")
-    print("Next Steps:")
-    print("1. Download datasets from Kaggle.")
-    print("2. Place them in the 'data/' folder.")
-    print("3. Implement a proper PyTorch Dataset class to load the real files.")
+
 
 if __name__ == "__main__":
     main()

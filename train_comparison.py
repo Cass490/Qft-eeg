@@ -19,13 +19,28 @@ def set_seed(seed=45):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+    
+    # Set PennyLane seed for quantum circuit randomness
+    import pennylane as qml
+    qml.numpy.random.seed(seed)
 
 def train_and_evaluate():
     # Set seed for reproducibility
     set_seed(45)
     # --- 1. Data Prep ---
-    print("Loading Data...")
-    df = pd.read_csv('data/emotions.csv')
+    print("Loading Multimodal EEG+ECG Data...")
+    
+    # Check if multimodal data exists, if not create it
+    import os
+    multimodal_path = 'data/multimodal_fused.csv'
+    
+    if not os.path.exists(multimodal_path):
+        print("Creating multimodal EEG+ECG dataset...")
+        from load_multimodal_data import save_multimodal_data
+        save_multimodal_data(multimodal_path)
+    
+    df = pd.read_csv(multimodal_path)
+    print(f"Loaded multimodal data: {df.shape}")
     
     le = LabelEncoder()
     labels = le.fit_transform(df['label'])
@@ -46,7 +61,7 @@ def train_and_evaluate():
     test_loader = DataLoader(test_data, batch_size=16, shuffle=False)
     
     input_dim = features.shape[1]
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     print(f"Using device: {device}")
     
     # --- 2. Setup Models ---
@@ -55,15 +70,16 @@ def train_and_evaluate():
         'Classical_AE': ClassicalAE(input_dim=input_dim).to(device)
     }
     
+    # Optimized learning rates
     optimizers = {
-        'Quantum_QVAE': torch.optim.Adam(models['Quantum_QVAE'].parameters(), lr=0.001),
-        'Classical_AE': torch.optim.Adam(models['Classical_AE'].parameters(), lr=0.001)
+        'Quantum_QVAE': torch.optim.Adam(models['Quantum_QVAE'].parameters(), lr=0.0004),
+        'Classical_AE': torch.optim.Adam(models['Classical_AE'].parameters(), lr=0.003)
     }
     
     history = {'Quantum_QVAE': [], 'Classical_AE': []}
     
     # --- 3. Training Loop ---
-    EPOCHS = 150 
+    EPOCHS = 150 # Full training: RZ gates, 6 layers, optimized LRs 
     
     for name, model in models.items():
         print(f"\n--- Training {name} ---")
