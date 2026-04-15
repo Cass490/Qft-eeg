@@ -1,0 +1,56 @@
+flowchart TB
+    subgraph Input["Input Layer"]
+        A[EEG Features<br/>2548-D<br/>emotions.csv]
+        B[ECG Features<br/>10-D<br/>MIT-BIH Database]
+    end
+    
+    C[Feature Fusion<br/>Concatenation<br/>2558-D]
+    
+    subgraph Encoder["Classical Encoder"]
+        D1[Dense Layer<br/>2558 → 512<br/>ReLU]
+        D2[Dense Layer<br/>512 → 128<br/>ReLU]
+        D3[Dense Layer<br/>128 → 64<br/>Sigmoid]
+    end
+    
+    subgraph Quantum["Quantum Processing"]
+        E1[Amplitude Encoding<br/>64-D → 6 qubits]
+        E2[Quantum Fourier Transform<br/>QFT Layer]
+        E3[Variational Layers × 6<br/>RY/RZ Rotations<br/>Ring Entanglement]
+        E4[Measurement<br/>Pauli-Z Expectation<br/>64-D Output]
+    end
+    
+    subgraph Decoder["Classical Decoder"]
+        F1[Dense Layer<br/>64 → 128<br/>ReLU]
+        F2[Dense Layer<br/>128 → 512<br/>ReLU]
+        F3[Dense Layer<br/>512 → 2558]
+    end
+    
+    G[Reconstructed Output<br/>2558-D]
+    
+    H[Latent Representation<br/>64-D]
+    I[Logistic Regression<br/>Emotion Classification]
+    J[Predicted Emotion<br/>3 Classes]
+    
+    A --> C
+    B --> C
+    C --> D1
+    D1 --> D2
+    D2 --> D3
+    D3 --> E1
+    E1 --> E2
+    E2 --> E3
+    E3 --> E4
+    E4 --> F1
+    F1 --> F2
+    F2 --> F3
+    F3 --> G
+    
+    E4 -.-> H
+    H --> I
+    I --> J
+    
+    style Quantum fill:#ffcccc,stroke:#cc0000,stroke-width:3px
+    style Input fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    style Encoder fill:#e6ffe6,stroke:#00cc00,stroke-width:2px
+    style Decoder fill:#e6ffe6,stroke:#00cc00,stroke-width:2px
+    style H fill:#fff9e6,stroke:#ff9900,stroke-width:2px

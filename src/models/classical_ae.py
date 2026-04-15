@@ -3,15 +3,13 @@ import torch.nn as nn
 
 class ClassicalAE(nn.Module):
     def __init__(self, input_dim, latent_dim=64):
-        """
-        Minimal Classical Autoencoder Baseline.
-        """
+    
         super().__init__()
         
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.Dropout(0.3),
             nn.Linear(256, 64), 
             nn.ReLU()
         )
@@ -19,7 +17,7 @@ class ClassicalAE(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(latent_dim, 256),
             nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.Dropout(0.3),
             nn.Linear(256, input_dim)
         )
 

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QVAE Dashboard | Fusion-Aware Emotion recognition</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-bg"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="q">Q</span>-VAE DASHBOARD
+            </div>
+            <div class="status">
+                <span class="status-dot"></span> System Online
+            </div>
+        </header>
+
+        <main>
+            <section class="top-row">
+                <div class="card control-card">
+                    <h2>Controls</h2>
+                    <p>Load a sample from the EEG dataset and run the hybrid quantum inference.</p>
+                    <div class="btn-group">
+                        <button id="loadSample" class="btn secondary">Load New Sample</button>
+                        <button id="runInference" class="btn primary">Run Inference</button>
+                    </div>
+                    <div id="sampleInfo" class="info-box">
+                        <small>Ground Truth:</small>
+                        <span id="groundTruth">-</span>
+                    </div>
+                </div>
+
+                <div class="card result-card">
+                    <h2>Prediction</h2>
+                    <div class="prediction-display">
+                        <div id="emotionResult" class="emotion-text">---</div>
+                        <div class="reliability">Quantum Confirmed: 85.71%</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="chart-row">
+                <div class="card chart-card full">
+                    <h2>Signal Reconstruction (EEG)</h2>
+                    <canvas id="reconstructionChart"></canvas>
+                </div>
+            </section>
+
+            <section class="bottom-row">
+                <div class="card chart-card half">
+                    <h2>Latent Space (64-D Quantum State)</h2>
+                    <canvas id="latentChart"></canvas>
+                </div>
+                <div class="card console-card half">
+                    <h2>System Logs</h2>
+                    <div id="console" class="console-output">
+                        > Welcome to Fusion-Aware QVAE Demo<br>
+                        > Ready for input...
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let reconChart, latentChart;
+        let currentData = null;
+
+        document.getElementById('loadSample').addEventListener('click', async () => {
+            try {
+                log("Fetching sample from emotions.csv...");
+                const res = await fetch('/api/sample');
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+                const sample = await res.json();
+                currentData = sample.data;
+                document.getElementById('groundTruth').innerText = sample.label;
+                log("Sample loaded. Ready for inference.");
+                updateInputDisplay(sample.data);
+            } catch (err) {
+                log(`Error loading sample: ${err.message}`, "error");
+                log("Make sure the Flask server is running and accessed via http://localhost:5000", "error");
+            }
+        });
+
+        document.getElementById('runInference').addEventListener('click', async () => {
+            if (!currentData) {
+                log("Error: Load a sample first!", "error");
+                return;
+            }
+            try {
+                log("Running Hybrid Quantum-Classical Forward Pass...");
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({data: currentData})
+                });
+                if (!res.ok) throw new Error(`Inference failed: ${res.status}`);
+                const results = await res.json();
+                
+                document.getElementById('emotionResult').innerText = results.emotion;
+                // Normalize casing for CSS classes (NEGATIVE -> negative)
+                document.getElementById('emotionResult').className = `emotion-text ${results.emotion.toLowerCase()}`;
+                
+                // Update confidence display
+                const confBox = document.querySelector('.reliability');
+                if (confBox) confBox.innerText = `Quantum Confidence: ${results.confidence}`;
+
+                log(`Inference complete. Predicted: ${results.emotion} (${results.confidence})`);
+                updateCharts(results);
+            } catch (err) {
+                log(`Inference Error: ${err.message}`, "error");
+            }
+        });
+
+        function log(msg, type="") {
+            const con = document.getElementById('console');
+            const span = document.createElement('div');
+            span.className = type;
+            span.innerHTML = `> ${msg}`;
+            con.appendChild(span);
+            con.scrollTop = con.scrollHeight;
+        }
+
+        function updateCharts(results) {
+            // Re-render Recon Chart
+            if(reconChart) reconChart.destroy();
+            const ctx = document.getElementById('reconstructionChart').getContext('2d');
+            
+            // Use normalized input from server to match reconstruction scale
+            const displayInput = results.input_norm.slice(0, 500);
+            const displayRecon = results.reconstructed.slice(0, 500);
+            const labels = Array.from({length: 500}, (_, i) => i);
+
+            reconChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Input EEG (Norm)', data: displayInput, borderColor: '#1976D2', borderWidth: 1, pointRadius: 0 },
+                        { label: 'Reconstructed', data: displayRecon, borderColor: '#D32F2F', borderWidth: 1.5, pointRadius: 0 }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { 
+                            display: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: { display: false }
+                    } 
+                }
+            });
+
+            // Re-render Latent Chart
+            if(latentChart) latentChart.destroy();
+            const lctx = document.getElementById('latentChart').getContext('2d');
+            latentChart = new Chart(lctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 64}, (_, i) => i),
+                    datasets: [{ label: 'Quantum Latent Features', data: results.latent, backgroundColor: '#455A64' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateInputDisplay(data) {
+            // Just clear charts until inference runs
+            if(reconChart) reconChart.destroy();
+            if(latentChart) latentChart.destroy();
+            document.getElementById('emotionResult').innerText = "---";
+            document.getElementById('emotionResult').className = "emotion-text";
+        }
+    </script>
+</body>
+</html>

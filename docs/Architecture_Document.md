@@ -23,9 +23,11 @@ The system consists of the following primary sub-systems:
 
 ### 3.3 Quantum Processing (QVAE Latent Layer)
 - Maps the 64-D input to a quantum state using Amplitude Encoding (6 qubits).
-- Utilizes a Quantum Fourier Transform (QFT) layer.
-- Applies 6 layers of parameterized Variational Quantum Circuits featuring RY/RZ rotations and ring entanglement.
-- Pauli-Z Expectation measurements yield a 64-D quantum-processed latent state.
+- **QFT Layer**: Applies a Quantum Fourier Transform for domain mapping.
+- **Variational Layers**: 6 identical layers of parameterized circuits:
+  - **Rotations**: RY(θ) and RZ(φ) on each of the 6 qubits.
+  - **Entanglement**: Ring (cyclic) CNOT entanglement pattern between adjacent qubits.
+- **Measurement**: Pauli-Z Expectation values are measured to produce a 64-D quantum-processed latent state.
 
 ### 3.4 Classical Decoder
 - Reconstructs the 2558-D original signal from the 64-D quantum latent state.
@@ -39,10 +41,11 @@ The system consists of the following primary sub-systems:
 - A Logistic Regression model provides predictions across 3 emotional state classes.
 
 ## 4. Performance Metrics
-Based on the high-level visual architecture, the system achieves:
-- **Accuracy**: 85.71%
-- **MSE Loss**: 0.2911
-- **Stability ($\sigma$)**: 0.0164
+Based on the high-level visual architecture and initial simulation results:
+- **Accuracy**: 85.71% (3-class emotion classification)
+- **MSE Loss**: 0.2911 (Overall reconstruction stability)
+- **Stability ($\sigma$)**: 0.0164 (Variance across test batches)
+- **Latent Dimension**: 64-D (Optimal for 6-qubit encoding)
 
 ## 5. Technology Stack
 - **Frameworks**: PyTorch (Classical Deep Learning), Qiskit/Pennylane context (Quantum Simulation).

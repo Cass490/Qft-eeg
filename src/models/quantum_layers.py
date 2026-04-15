@@ -13,18 +13,17 @@ class QuantumEncoder(nn.Module):
         self.dev = qml.device("default.qubit", wires=n_qubits)
         
         @qml.qnode(self.dev, interface="torch")
-        def circuit(inputs, weights_rot, weights_rz):
+        def circuit(inputs, weights_rot):
             # 1. Amplitude Encoding (Time Domain)
             qml.AmplitudeEmbedding(features=inputs, wires=range(n_qubits), normalize=True, pad_with=0.0)
             
             # 2. Quantum Fourier Transform (QFT)
             qml.QFT(wires=range(n_qubits))
             
-            # 3. Variational Layers (with both RY and RZ for more expressivity)
+            # 3. Variational Layers (matching older checkpoint with only RY)
             for l in range(n_layers):
                 for q in range(n_qubits):
                     qml.RY(weights_rot[l, q], wires=q)
-                    qml.RZ(weights_rz[l, q], wires=q)  # Add RZ gates!
                 
                 # Ring Entanglement
                 for q in range(n_qubits):
@@ -37,8 +36,7 @@ class QuantumEncoder(nn.Module):
         # Moderate initialization
         scale = 0.05
         self.weights_rot = nn.Parameter(torch.randn(n_layers, n_qubits) * scale)
-        self.weights_rz = nn.Parameter(torch.randn(n_layers, n_qubits) * scale)
 
     def forward(self, x):
-        results = [self.qnode(x[i], self.weights_rot, self.weights_rz) for i in range(x.shape[0])]
+        results = [self.qnode(x[i], self.weights_rot) for i in range(x.shape[0])]
         return torch.stack(results)

@@ -30,7 +30,21 @@ This document describes the functional modules of the Fusion-Aware Quantum Varia
   - Simulates training progress and generates comparative performance metrics between the Hybrid QVAE and classical counterparts.
 
 ### 2.4 Artifact and Visual Generation Module
-**File(s):** `generate_paper_figures.py`, `generate_qiskit_circuit.py`, `plot_results.py`, `diag.py`
+**File(s):** `generate_paper_figures.py`, `generate_qiskit_circuit.py`, `plot_results.py`, `diag.py`, `diag_v2.py`
 - **Functionality:** 
   - Generates visual artifacts like the system architecture diagrams (Mermaid format), training loss curves, and evaluation plots.
   - Extracts circuit architectures into visual formats for academic paper publication.
+  - Produces premium-quality architecture diagrams (`arch_premium.png`) highlighting the input-process-output flow.
+
+## 3. Core Project Workflow
+
+1. **Wait for Input**: System receives synchronized EEG (14 Channels) and ECG (1 Channel) time-series data.
+2. **Preprocessing**: 
+   - EEG undergoes artifact removal (ICA) and bandpass filtering. 
+   - ECG is processed via Pan-Tompkins for QRS detection and statistical feature extraction (10-D).
+3. **Fusion**: Features are concatenated into a 2558-D vector and normalized.
+4. **Encoding**: Classical Dense layers compress the vector to a 64-D latent feature set.
+5. **Quantum Entanglement**: The 64-D features are mapped to a 6-qubit Hilbert space, processed via QFT and 6 layers of RY/RZ rotations with ring entanglement.
+6. **Decoding / Prediction**:
+   - The processed latent state is decoded back to the original 2558-D domain to calculate reconstruction loss.
+   - Simultaneously, a Logistic Regression classifier predicts the emotional state (Positive, Neutral, Negative).

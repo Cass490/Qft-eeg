@@ -15,7 +15,7 @@
 - **Data Authenticity:** The model simulation was initially built on random dummy data tensors. Relying purely on synthetic matrices restricted the ability to analyze actual baseline emotion classification metrics early on.
 
 ## 4. Action Items for Next Sprint
-1. **Optimize Quantum Layer:** Profile the quantum circuit simulation and explore parameter-shift gradients or GPU-accelerated simulators (like Pennylane's Lightning) to support larger batch sizes.
-2. **Real Data Ingestion Check:** Swap out `np.random.randn` dummy arrays in `main.py` entirely and ensure the `MultimodalDataLoader` is injecting the live data into the optimizer.
-3. **Hyperparameter Tuning:** Systematically tune the LR and the dimensionality of the intermediate classical dense layers based on empirical loss decay matrices.
-4. **Code Consolidation:** Unify the standalone training scripts to utilize a unified configuration loader, minimizing boilerplate PyTorch redundancy.
+1. **Optimize Quantum Layer:** Profile the quantum circuit simulation (Qiskit vs Pennylane Lightning) to support larger batch sizes beyond `BATCH_SIZE=4`.
+2. **Real Data Ingestion:** Complete the transition from `np.random` dummy arrays to the `MultimodalDataLoader` using `emotions.csv` and MIT-BIH datasets.
+3. **Hyperparameter Grid Search:** Systematically evaluate impact of the `LR=0.001` and classical layer depths on convergence stability.
+4. **Paper Compilation:** Use the generated `arch_premium.png` and `quantum_circuit_qiskit.png` artifacts to finalize the "Methodology" section of the project report.
